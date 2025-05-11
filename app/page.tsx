@@ -31,7 +31,7 @@ export default function Home() {
 			}
 			// try {
 			const response = await fetch(
-				`${getApiBaseUrl()}/api/auth/verify-admin`,
+				`${getApiBaseUrl()}/api/auth/verify`,
 				{
 					headers: {
 						Authorization: `Bearer ${token}`,
