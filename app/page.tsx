@@ -22,58 +22,70 @@ export default function Home() {
 	useEffect(() => {
 		const checkUser = async () => {
 			setIsLoading(true);
-			const token = await getToken();
-
-			if (!token) {
-				// setIsAdmin(false); // Or handle as per your app's logic for non-signed-in users
-				setIsLoading(false);
-				return;
-			}
-			// try {
-			const response = await fetch(
-				`${getApiBaseUrl()}/api/auth/verify`,
-				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				}
-			);
-			const responseText = await response.text(); // Read as text first
-
 			try {
-				const data = JSON.parse(responseText); // Then parse as JSON
-				if (response.ok) {
-					setIsAdmin(!!data.isAdmin);
+				// Outer try for the whole async operation
+				const token = await getToken();
+				if (!token) {
+					// setIsLoading(false) will be called in finally, isAdmin defaults to false
+					return;
+				}
 
-					if (data.isAdmin) {
-						console.log("User is admin, can access /admin");
+				const response = await fetch(
+					`${getApiBaseUrl()}/api/auth/verify`, // Assuming this is now the correct endpoint
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					}
+				);
+				const responseText = await response.text();
+
+				try {
+					// Inner try for JSON parsing and subsequent logic
+					const data = JSON.parse(responseText);
+					if (response.ok) {
+						setIsAdmin(!!data.isAdmin);
+						if (data.isAdmin) {
+							console.log("User is admin, can access /admin");
+						} else {
+							console.log(
+								"User is not an admin, cannot access /admin"
+							);
+						}
 					} else {
 						console.log(
-							"User is not an admin, cannot access /admin"
+							"❌ Verification failed:",
+							response.status,
+							responseText
 						);
+						setIsAdmin(false);
 					}
-				} else {
-					console.log(
-						"❌ Verification failed:",
-						response.status,
+				} catch (parseError) {
+					// Catch JSON.parse errors or sync errors in the inner block
+					console.error(
+						"🚨 Error processing response:",
+						parseError,
+						"Response text:",
 						responseText
 					);
-					// Set as non-admin on failed verification
 					setIsAdmin(false);
 				}
-			} catch (err) {
-				console.error("🚨 Request error:", err);
-				// Set as non-admin on error
-				setIsAdmin(false);
+			} catch (fetchError) {
+				// Catch errors from getToken(), fetch() itself, or response.text()
+				console.error(
+					"🚨 Network or fetch operation error:",
+					fetchError
+				);
+				setIsAdmin(false); // Assume not admin on any fetch-related error
 			} finally {
-				setIsLoading(false);
+				setIsLoading(false); // Ensure loading is always set to false
 			}
 		};
 
 		if (isSignedIn) {
 			checkUser();
 		} else {
-			setIsLoading(false);
+			setIsLoading(false); // Initial state if not signed in
 		}
 	}, [isSignedIn, getToken]);
 
