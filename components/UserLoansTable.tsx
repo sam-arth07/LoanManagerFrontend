@@ -1,8 +1,8 @@
 "use client";
 
 import { useToast } from "@/hooks/use-toast"; // Added useToast
+import { getApiBaseUrl, getAuthHeaders } from "@/utils/api-service"; // Added getAuthHeaders
 import { useAuth } from "@clerk/nextjs";
-import axios from "axios";
 import {
 	ArrowDownAZ,
 	ArrowUpAZ,
@@ -107,89 +107,78 @@ export default function UserLoansTable({
 		async function fetchLoans() {
 			try {
 				setIsLoading(true);
-				const token = await getToken();
+				const headers = await getAuthHeaders(getToken);
+				const response = await fetch(
+					`${getApiBaseUrl()}/api/loan/my-loans`, // Changed
+					{ headers }
+				);
 
-				if (!token) {
-					setError("Authentication required");
-					return;
+				if (!response.ok) {
+					throw new Error("Failed to fetch loans");
 				}
 
-				try {
-					const response = await axios.get(
-						"http://localhost:5000/api/loan/my-loans",
-						{
-							headers: {
-								Authorization: `Bearer ${token}`,
-							},
-							timeout: 5000, // 5 seconds timeout
-						}
-					);
+				const data = await response.json();
+				setLoans(data);
+				setFilteredLoans(data);
+				setError(null);
+			} catch (apiError) {
+				console.warn("Using demo data due to API error:", apiError);
+				// Use demo data for presentation
+				const demoLoans: Loan[] = [
+					{
+						id: "1",
+						fullName: "John Smith",
+						loanAmount: 50000,
+						purpose: "Home Renovation",
+						duration: 12,
+						status: "pending" as "pending",
+						appliedAt: new Date().toISOString(),
+						employmentStatus: "Employed",
+						employmentAddress: "123 Work Street, City",
+					},
+					{
+						id: "2",
+						fullName: "John Smith",
+						loanAmount: 25000,
+						purpose: "Education",
+						duration: 24,
+						status: "approved" as "approved",
+						appliedAt: new Date(
+							Date.now() - 7 * 24 * 60 * 60 * 1000
+						).toISOString(),
+						employmentStatus: "Employed",
+						employmentAddress: "123 Work Street, City",
+					},
+					{
+						id: "3",
+						fullName: "John Smith",
+						loanAmount: 10000,
+						purpose: "Business",
+						duration: 6,
+						status: "rejected" as "rejected",
+						appliedAt: new Date(
+							Date.now() - 30 * 24 * 60 * 60 * 1000
+						).toISOString(),
+						employmentStatus: "Self-Employed",
+						employmentAddress: "456 Business Ave, City",
+					},
+					{
+						id: "4",
+						fullName: "John Smith",
+						loanAmount: 75000,
+						purpose: "Car Purchase",
+						duration: 36,
+						status: "verified" as "verified",
+						appliedAt: new Date(
+							Date.now() - 14 * 24 * 60 * 60 * 1000
+						).toISOString(),
+						employmentStatus: "Employed",
+						employmentAddress: "123 Work Street, City",
+					},
+				];
 
-					setLoans(response.data);
-					setFilteredLoans(response.data);
-					setError(null);
-				} catch (apiError) {
-					console.warn("Using demo data due to API error:", apiError);
-					// Use demo data for presentation
-					const demoLoans: Loan[] = [
-						{
-							id: "1",
-							fullName: "John Smith",
-							loanAmount: 50000,
-							purpose: "Home Renovation",
-							duration: 12,
-							status: "pending" as "pending",
-							appliedAt: new Date().toISOString(),
-							employmentStatus: "Employed",
-							employmentAddress: "123 Work Street, City",
-						},
-						{
-							id: "2",
-							fullName: "John Smith",
-							loanAmount: 25000,
-							purpose: "Education",
-							duration: 24,
-							status: "approved" as "approved",
-							appliedAt: new Date(
-								Date.now() - 7 * 24 * 60 * 60 * 1000
-							).toISOString(),
-							employmentStatus: "Employed",
-							employmentAddress: "123 Work Street, City",
-						},
-						{
-							id: "3",
-							fullName: "John Smith",
-							loanAmount: 10000,
-							purpose: "Business",
-							duration: 6,
-							status: "rejected" as "rejected",
-							appliedAt: new Date(
-								Date.now() - 30 * 24 * 60 * 60 * 1000
-							).toISOString(),
-							employmentStatus: "Self-Employed",
-							employmentAddress: "456 Business Ave, City",
-						},
-						{
-							id: "4",
-							fullName: "John Smith",
-							loanAmount: 75000,
-							purpose: "Car Purchase",
-							duration: 36,
-							status: "verified" as "verified",
-							appliedAt: new Date(
-								Date.now() - 14 * 24 * 60 * 60 * 1000
-							).toISOString(),
-							employmentStatus: "Employed",
-							employmentAddress: "123 Work Street, City",
-						},
-					];
-
-					setLoans(demoLoans);
-					setFilteredLoans(demoLoans);
-				}
-			} catch (err) {
-				console.error("Error fetching loans:", err);
-				setError("Failed to fetch loan applications");
+				setLoans(demoLoans);
+				setFilteredLoans(demoLoans);
 			} finally {
 				setIsLoading(false);
 			}
@@ -356,24 +345,18 @@ export default function UserLoansTable({
 		if (!loanToDelete) return;
 
 		try {
-			const token = await getToken();
-			if (!token) {
-				toast({
-					title: "Error",
-					description: "Authentication required.",
-					variant: "destructive",
-				});
-				return;
-			}
-
-			await axios.delete(
-				`http://localhost:5000/api/loan/${loanToDelete.id}`,
+			const headers = await getAuthHeaders(getToken);
+			const response = await fetch(
+				`${getApiBaseUrl()}/api/loan/${loanToDelete.id}`, // Changed
 				{
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
+					method: "DELETE",
+					headers,
 				}
 			);
+
+			if (!response.ok) {
+				throw new Error("Failed to delete loan");
+			}
 
 			setLoans((prevLoans) =>
 				prevLoans.filter((loan) => loan.id !== loanToDelete.id)

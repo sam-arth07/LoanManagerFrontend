@@ -1,7 +1,11 @@
 "use client";
 
+import {
+	LoanApplication,
+	getApiBaseUrl,
+	getAuthHeaders,
+} from "@/utils/api-service";
 import { useAuth } from "@clerk/nextjs";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { Card } from "./ui/card";
 
@@ -32,17 +36,24 @@ export default function LoanStatus() {
 				}
 
 				try {
-					const response = await axios.get(
-						"http://localhost:5000/api/loan/my-loans",
-						{
-							headers: {
-								Authorization: `Bearer ${token}`,
-							},
-							timeout: 5000, // 5 seconds timeout
-						}
+					const headers = await getAuthHeaders(getToken);
+					const response = await fetch(
+						`${getApiBaseUrl()}/api/loan/my-loans`,
+						{ headers }
 					);
-
-					setLoans(response.data);
+					if (!response.ok) {
+						throw new Error("Failed to fetch loan statuses");
+					}
+					const data: LoanApplication[] = await response.json();
+					const typedData = data.map((loan) => ({
+						...loan,
+						status: loan.status as
+							| "pending"
+							| "approved"
+							| "rejected"
+							| "verified",
+					}));
+					setLoans(typedData);
 					setError(null);
 				} catch (apiError) {
 					console.warn("Using demo data due to API error:", apiError);

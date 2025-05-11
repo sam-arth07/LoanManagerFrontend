@@ -3,6 +3,7 @@
 import UserLoansTable from "@/components/UserLoansTable";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getApiBaseUrl } from "@/utils/api-service"; // Added import
 import { useAuth, UserButton, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import {
@@ -51,7 +52,7 @@ export default function Dashboard() {
 				}
 
 				const response = await axios.get(
-					"http://localhost:5000/api/loan/my-loans",
+					`${getApiBaseUrl()}/api/loan/my-loans`, // Changed
 					{
 						headers: {
 							Authorization: `Bearer ${token}`,

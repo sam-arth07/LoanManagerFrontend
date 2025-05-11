@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getApiBaseUrl } from "@/utils/api-service"; // Added import
 import { useAuth } from "@clerk/nextjs";
 import { ChevronLeft, ChevronRight, Search, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -43,8 +44,7 @@ export default function UsersPage() {
 			try {
 				setIsLoading(true);
 				const token = await getToken();
-				const apiUrl =
-					process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+				const apiUrl = getApiBaseUrl(); // Changed
 				const response = await fetch(
 					`${apiUrl}/api/admin/users?page=${pagination.page}&limit=${pagination.limit}`,
 					{

@@ -1,6 +1,7 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
+import { getApiBaseUrl } from "@/utils/api-service"; // Added import
 import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
 import { useState } from "react";
@@ -120,7 +121,7 @@ export default function LoanForm({ userId }: { userId: string }) {
 			}
 
 			const response = await axios.post(
-				"http://localhost:5000/api/loan/",
+				`${getApiBaseUrl()}/api/loan/`, // Changed
 				{
 					userId,
 					fullName: form.fullName,

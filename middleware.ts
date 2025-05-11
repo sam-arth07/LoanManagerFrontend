@@ -1,3 +1,4 @@
+import { getApiBaseUrl } from "@/utils/api-service"; // Added import
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
@@ -29,9 +30,7 @@ export default clerkMiddleware(async (auth, req) => {
 		}
 
 		const verifyResponse = await fetch(
-			`${
-				process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-			}/api/auth/verify`,
+			`${getApiBaseUrl()}/api/auth/verify`, // Changed
 			{
 				method: "GET",
 				headers: {

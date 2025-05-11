@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { withErrorHandling } from "@/utils/api-error";
 import {
+	getApiBaseUrl,
 	LoanDetails as LoanDetailsType,
 	useApiService,
-} from "@/utils/api-service";
+} from "@/utils/api-service"; // Added import
 import { useAuth } from "@clerk/nextjs";
 import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -109,8 +110,7 @@ export default function LoanDetailsPage({ params }: LoanDetailsPageProps) {
 			);
 
 			// Get the API base URL from the same function used by apiService
-			const baseUrl =
-				process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+			const baseUrl = getApiBaseUrl(); // Changed
 
 			// Add Content-Type header and Authorization header
 			const token = await getToken();
