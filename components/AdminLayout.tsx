@@ -1,6 +1,6 @@
 "use client";
 
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import {
 	BarChart4,
 	BellIcon,
@@ -26,63 +26,42 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 	const [isAdmin, setIsAdmin] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const { getToken, isLoaded, userId } = useAuth();
+	const { user } = useUser();
 	const router = useRouter();
 
 	useEffect(() => {
 		async function verifyAdmin() {
 			if (isLoaded && userId) {
-				try {					const token = await getToken();
-					console.log("Sending admin verification request...");
-					const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-					const response = await fetch(
-						`${apiUrl}/api/auth/verify`,
-						{
-							headers: {
-								Authorization: `Bearer ${token}`,
-							},
-						}
-					);
+				try {
+					const token = await getToken();
+					// const apiUrl =
+					// 	process.env.NEXT_PUBLIC_API_URL ||
+					// 	"http://localhost:5000";
+					const response = await fetch(`/api/auth/verify-admin`, {
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					});
 
-					console.log(
-						"Admin verification response status:",
-						response.status
-					);
-					const responseText = await response.text();
-					console.log(
-						"Admin verification raw response:",
-						responseText
-					);
+					// const responseText = await response.text();
 					let data;
 					try {
-						data = JSON.parse(responseText);
-						console.log("Admin verification parsed data:", data);
-
+						data = await response.json();
 						// TEMPORARY: Allow all users to access admin for testing
-						console.log(
-							"TEMPORARY: Allowing all users to access admin panel"
-						);
 						setIsAdmin(true);
 
 						// If you want to enforce admin-only access, uncomment this block:
 						/*
 						if (data.isAdmin) {
-							console.log("User is verified as admin!");
 							setIsAdmin(true);
 						} else {
-							console.log("User is NOT an admin, redirecting...");
-							// Redirect non-admin users to the regular dashboard
 							router.push("/dashboard");
 						}
 						*/
 					} catch (jsonError) {
-						console.error(
-							"Failed to parse JSON response:",
-							jsonError
-						);
 						router.push("/dashboard");
 					}
 				} catch (error) {
-					console.error("Failed to verify admin status:", error);
 					router.push("/dashboard"); // Redirect on error
 				} finally {
 					setIsLoading(false);
@@ -121,7 +100,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 				{/* User info */}
 				<div className="p-4 flex items-center">
 					<UserButton afterSignOutUrl="/" />
-					<span className="ml-3 text-sm">John Doe</span>
+					{user ? (
+						<span className="ml-3 text-sm">
+							{user.fullName ||
+								user.firstName ||
+								user.primaryEmailAddress?.emailAddress ||
+								"User"}
+						</span>
+					) : (
+						<span className="ml-3 text-sm text-gray-300">
+							Loading...
+						</span>
+					)}
 				</div>
 
 				{/* Navigation */}

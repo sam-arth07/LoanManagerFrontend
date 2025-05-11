@@ -36,17 +36,64 @@ export default function LoanForm({ userId }: { userId: string }) {
 		creditCheck: false,
 	});
 
-	// Sample data for the chart
-	const data = [
-		{ month: 1, payment: 250 },
-		{ month: 2, payment: 250 },
-		{ month: 3, payment: 250 },
-		{ month: 4, payment: 250 },
-		{ month: 5, payment: 250 },
-		{ month: 6, payment: 250 },
-		{ month: 7, payment: 250 },
-		{ month: 8, payment: 250 },
-	];
+	// Calculate monthly payment using the formula for equal installment loans
+	const calculateMonthlyPayment = (
+		principal: number,
+		months: number,
+		interestRate = 0.12
+	) => {
+		// If inputs are invalid, return 0
+		if (!principal || !months || principal <= 0 || months <= 0) return 0;
+
+		// Monthly interest rate (annual rate divided by 12)
+		const monthlyRate = interestRate / 12;
+
+		// Calculate monthly payment using the formula: P × r × (1 + r)^n / ((1 + r)^n - 1)
+		// where P = principal, r = monthly interest rate, n = number of months
+		const payment =
+			(principal * monthlyRate * Math.pow(1 + monthlyRate, months)) /
+			(Math.pow(1 + monthlyRate, months) - 1);
+
+		return Math.round(payment * 100) / 100; // Round to 2 decimal places
+	};
+
+	// Generate payment schedule data
+	const generatePaymentSchedule = () => {
+		const loanAmount = parseFloat(form.loanAmount) || 0;
+		const duration = parseInt(form.duration) || 0;
+
+		// If inputs are invalid, return empty array
+		if (loanAmount <= 0 || duration <= 0) return [];
+
+		const monthlyPayment = calculateMonthlyPayment(loanAmount, duration);
+		const interestRate = 0.12; // 12% annual interest rate
+		const monthlyRate = interestRate / 12;
+
+		let remainingBalance = loanAmount;
+		const schedule = [];
+
+		for (let month = 1; month <= duration; month++) {
+			const interestPayment = remainingBalance * monthlyRate;
+			const principalPayment = monthlyPayment - interestPayment;
+			remainingBalance -= principalPayment;
+
+			schedule.push({
+				month,
+				payment: monthlyPayment,
+				principalPayment: Math.round(principalPayment * 100) / 100,
+				interestPayment: Math.round(interestPayment * 100) / 100,
+				remainingBalance: Math.max(
+					0,
+					Math.round(remainingBalance * 100) / 100
+				),
+			});
+		}
+
+		return schedule;
+	};
+
+	// Generate payment schedule based on current inputs
+	const paymentSchedule = generatePaymentSchedule();
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!form.termsAccepted) {
@@ -72,7 +119,6 @@ export default function LoanForm({ userId }: { userId: string }) {
 				return;
 			}
 
-			console.log("Making API request to backend with token...");
 			const response = await axios.post(
 				"http://localhost:5000/api/loan/",
 				{
@@ -93,7 +139,6 @@ export default function LoanForm({ userId }: { userId: string }) {
 				}
 			);
 
-			console.log("Response:", response.data);
 			setFormStatus({
 				type: "success",
 				message: "Loan application submitted successfully!",
@@ -111,10 +156,8 @@ export default function LoanForm({ userId }: { userId: string }) {
 				termsAccepted: false,
 			});
 		} catch (error) {
-			console.error("Error submitting loan application:", error);
 			if (axios.isAxiosError(error)) {
 				if (error.response) {
-					console.error("Response error:", error.response.data);
 					setFormStatus({
 						type: "error",
 						message: `Error ${error.response.status}: ${
@@ -124,7 +167,6 @@ export default function LoanForm({ userId }: { userId: string }) {
 						}`,
 					});
 				} else if (error.request) {
-					console.error("Request error - no response received");
 					setFormStatus({
 						type: "error",
 						message:
@@ -181,6 +223,7 @@ export default function LoanForm({ userId }: { userId: string }) {
 						</div>
 
 						<div>
+							{" "}
 							<label
 								htmlFor="duration"
 								className="block text-sm font-medium mb-1">
@@ -197,6 +240,8 @@ export default function LoanForm({ userId }: { userId: string }) {
 										duration: e.target.value,
 									})
 								}
+								min="1"
+								max="60"
 								required
 								className="w-full border rounded p-2"
 							/>
@@ -227,10 +272,11 @@ export default function LoanForm({ userId }: { userId: string }) {
 					{/* Right column */}
 					<div className="space-y-4">
 						<div>
+							{" "}
 							<label
 								htmlFor="loanAmount"
 								className="block text-sm font-medium mb-1">
-								How much do you need?
+								How much do you need? (₹)
 							</label>
 							<input
 								id="loanAmount"
@@ -243,6 +289,7 @@ export default function LoanForm({ userId }: { userId: string }) {
 										loanAmount: e.target.value,
 									})
 								}
+								min="1000"
 								required
 								className="w-full border rounded p-2"
 							/>
@@ -311,25 +358,137 @@ export default function LoanForm({ userId }: { userId: string }) {
 					<h2 className="text-lg font-medium mb-2">
 						Payment Schedule
 					</h2>
-					<div className="border rounded p-4 overflow-x-auto">
-						<LineChart
-							width={600}
-							height={300}
-							data={data}
-							margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-							<CartesianGrid strokeDasharray="3 3" />
-							<XAxis dataKey="month" />
-							<YAxis />
-							<Tooltip />
-							<Legend />
-							<Line
-								type="monotone"
-								dataKey="payment"
-								stroke="#82ca9d"
-								activeDot={{ r: 8 }}
-							/>
-						</LineChart>
-					</div>
+
+					{parseFloat(form.loanAmount) > 0 &&
+					parseInt(form.duration) > 0 ? (
+						<>
+							<div className="bg-gray-50 p-3 mb-4 rounded">
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+									{" "}
+									<div>
+										<p className="text-sm text-gray-600">
+											Loan Amount
+										</p>
+										<p className="font-semibold text-lg">
+											₹
+											{parseFloat(
+												form.loanAmount
+											).toLocaleString()}
+										</p>
+									</div>
+									<div>
+										<p className="text-sm text-gray-600">
+											Monthly Payment
+										</p>
+										<p className="font-semibold text-lg">
+											₹
+											{calculateMonthlyPayment(
+												parseFloat(form.loanAmount),
+												parseInt(form.duration)
+											).toLocaleString()}
+										</p>
+									</div>
+									<div>
+										<p className="text-sm text-gray-600">
+											Total Payment
+										</p>
+										<p className="font-semibold text-lg">
+											₹
+											{(
+												calculateMonthlyPayment(
+													parseFloat(form.loanAmount),
+													parseInt(form.duration)
+												) * parseInt(form.duration)
+											).toLocaleString()}
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<div className="border rounded p-4 overflow-x-auto">
+								<LineChart
+									width={600}
+									height={300}
+									data={paymentSchedule}
+									margin={{
+										top: 5,
+										right: 30,
+										left: 20,
+										bottom: 5,
+									}}>
+									<CartesianGrid strokeDasharray="3 3" />
+									<XAxis
+										dataKey="month"
+										label={{
+											value: "Month",
+											position: "insideBottomRight",
+											offset: -10,
+										}}
+									/>{" "}
+									<YAxis
+										label={{
+											value: "Amount (₹)",
+											angle: -90,
+											position: "insideLeft",
+										}}
+										tickFormatter={(value) =>
+											value.toLocaleString()
+										}
+									/>
+									<Tooltip
+										formatter={(value) => [
+											"₹" +
+												Number(value).toLocaleString(),
+											undefined,
+										]}
+										labelFormatter={(label) =>
+											`Month ${label}`
+										}
+									/>
+									<Legend />
+									<Line
+										name="Monthly Payment"
+										type="monotone"
+										dataKey="payment"
+										stroke="#0c3e19"
+										strokeWidth={2}
+										activeDot={{ r: 8 }}
+									/>
+									<Line
+										name="Remaining Balance"
+										type="monotone"
+										dataKey="remainingBalance"
+										stroke="#6b9908"
+										strokeWidth={2}
+										dot={false}
+									/>
+									<Line
+										name="Principal Payment"
+										type="monotone"
+										dataKey="principalPayment"
+										stroke="#82ca9d"
+										strokeWidth={1.5}
+										dot={false}
+									/>
+									<Line
+										name="Interest Payment"
+										type="monotone"
+										dataKey="interestPayment"
+										stroke="#ffc658"
+										strokeWidth={1.5}
+										dot={false}
+									/>
+								</LineChart>
+							</div>
+						</>
+					) : (
+						<div className="border rounded p-8 text-center text-gray-500">
+							<p>
+								Enter a loan amount and duration to see your
+								payment schedule
+							</p>
+						</div>
+					)}
 				</div>
 				{/* Terms and conditions */}
 				<div className="flex items-start space-x-2">

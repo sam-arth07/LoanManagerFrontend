@@ -127,8 +127,9 @@ export default function LoanStatus() {
 					<tbody>
 						{loans.map((loan) => (
 							<tr key={loan.id} className="border-b">
+								{" "}
 								<td className="py-3">
-									${loan.loanAmount.toLocaleString()}
+									₹{loan.loanAmount.toLocaleString()}
 								</td>
 								<td className="py-3">{loan.purpose}</td>
 								<td className="py-3">{loan.duration} months</td>

@@ -1,7 +1,8 @@
-import "./globals.css"; 
+import AppClientWrapper from "@/components/AppClientWrapper";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Inter } from "next/font/google";
+import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({
 						attribute="class"
 						defaultTheme="light"
 						enableSystem>
-						{children}
+						<AppClientWrapper>{children}</AppClientWrapper>
 					</ThemeProvider>
 				</body>
 			</html>

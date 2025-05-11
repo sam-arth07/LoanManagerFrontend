@@ -41,8 +41,10 @@ export default function UsersPage() {
 			if (!isLoaded) return;
 
 			try {
-				setIsLoading(true);				const token = await getToken();
-				const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+				setIsLoading(true);
+				const token = await getToken();
+				const apiUrl =
+					process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 				const response = await fetch(
 					`${apiUrl}/api/admin/users?page=${pagination.page}&limit=${pagination.limit}`,
 					{

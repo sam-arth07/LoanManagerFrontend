@@ -1,6 +1,10 @@
 "use client";
 
+import { ErrorDisplay, ErrorToast } from "@/components/ErrorToast";
+import Loader from "@/components/Loader";
 import { Card } from "@/components/ui/card";
+import { withErrorHandling } from "@/utils/api-error";
+import { DashboardStats, useApiService } from "@/utils/api-service";
 import { useAuth } from "@clerk/nextjs";
 import {
 	ArrowDownUp,
@@ -13,11 +17,7 @@ import {
 	XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useApiService, DashboardStats } from "@/utils/api-service";
-import { withErrorHandling } from "@/utils/api-error";
-import { ErrorToast, ErrorDisplay } from "@/components/ErrorToast";
-import Loader from "@/components/Loader";
+import React, { useEffect, useState } from "react";
 
 export default function AdminDashboardPage() {
 	const [dashboardData, setDashboardData] = useState<DashboardStats | null>(
@@ -29,18 +29,67 @@ export default function AdminDashboardPage() {
 	const apiService = useApiService();
 
 	// Track last refreshed time
-	const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+	const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date()); // Debug counter to track rerender cycles
+	const renderCountRef = React.useRef(0);
+
 	useEffect(() => {
+		// Log render count to detect looping issues
+		renderCountRef.current += 1;
+		console.log(`Dashboard render count: ${renderCountRef.current}`);
+
+		// If we're rerendering too much, there might be an issue
+		if (renderCountRef.current > 5) {
+			console.warn("Possible render loop detected in Dashboard");
+		}
+
+		let isMounted = true;
+
 		async function fetchDashboardData() {
 			if (!isLoaded) return;
-            
-            setIsLoading(true);
-            setError(null);
+
+			console.log("Fetching dashboard data...");
+			setIsLoading(true);
+			setError(null);
 
 			const { data, error } = await withErrorHandling(
 				() => apiService.getDashboardStats(),
-                (err) => console.error("Dashboard data fetch error:", err),
-                { retry: true, retryDelay: 1500 } // Retry once after 1.5s if the call fails
+				(err) => console.error("Dashboard data fetch error:", err),
+				{ retry: true, retryDelay: 1500 } // Retry once after 1.5s if the call fails
+			);
+
+			// Only update state if the component is still mounted
+			if (isMounted) {
+				if (data) {
+					setDashboardData(data);
+					setLastRefreshed(new Date());
+				} else if (error) {
+					setError(error);
+				}
+
+				setIsLoading(false);
+			}
+		}
+
+		fetchDashboardData();
+
+		// Cleanup function to prevent state updates if the component unmounts
+		return () => {
+			isMounted = false;
+		};
+
+		// Only re-run when auth status changes, not when apiService changes
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [isLoaded]); // Function to refresh dashboard data manually
+	const refreshDashboardData = async () => {
+		if (!isLoaded || isLoading) return; // Prevent multiple simultaneous refreshes
+
+		setIsLoading(true);
+		setError(null);
+
+		try {
+			const { data, error } = await withErrorHandling(
+				() => apiService.getDashboardStats(),
+				(err) => console.error("Error refreshing dashboard data:", err)
 			);
 
 			if (data) {
@@ -49,32 +98,12 @@ export default function AdminDashboardPage() {
 			} else if (error) {
 				setError(error);
 			}
-			
+		} catch (err) {
+			console.error("Unexpected error during refresh:", err);
+			setError("An unexpected error occurred while refreshing data");
+		} finally {
 			setIsLoading(false);
 		}
-
-		fetchDashboardData();
-	}, [isLoaded, apiService]);
-	// Function to refresh dashboard data manually
-	const refreshDashboardData = async () => {
-		if (!isLoaded) return;
-		
-		setIsLoading(true);
-		setError(null);
-		
-		const { data, error } = await withErrorHandling(
-			() => apiService.getDashboardStats(),
-			(err) => console.error("Error refreshing dashboard data:", err)
-		);
-		
-		if (data) {
-			setDashboardData(data);
-			setLastRefreshed(new Date());
-		} else if (error) {
-			setError(error);
-		}
-		
-		setIsLoading(false);
 	};
 
 	// Format currency
@@ -122,12 +151,12 @@ export default function AdminDashboardPage() {
 		dashboardData?.loanStats.pending || 0,
 		dashboardData?.loanStats.total || 0
 	);
-	
+
 	const approvedPercentage = calculatePercentage(
 		dashboardData?.loanStats.approved || 0,
 		dashboardData?.loanStats.total || 0
 	);
-	
+
 	const rejectedPercentage = calculatePercentage(
 		dashboardData?.loanStats.rejected || 0,
 		dashboardData?.loanStats.total || 0
@@ -136,31 +165,30 @@ export default function AdminDashboardPage() {
 	// Add visual progress bar for loan status
 	const LoanStatusProgressBar = () => {
 		if (!dashboardData || dashboardData.loanStats.total === 0) return null;
-		
+
 		return (
 			<Card className="p-6 bg-white shadow-sm">
-				<h3 className="text-sm font-medium text-gray-700 mb-4">Loan Status Distribution</h3>
+				<h3 className="text-sm font-medium text-gray-700 mb-4">
+					Loan Status Distribution
+				</h3>
 				<div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden flex">
 					{pendingPercentage > 0 && (
-						<div 
-							className="bg-yellow-400 h-full" 
+						<div
+							className="bg-yellow-400 h-full"
 							style={{ width: `${pendingPercentage}%` }}
-							title={`Pending: ${pendingPercentage}%`}
-						></div>
+							title={`Pending: ${pendingPercentage}%`}></div>
 					)}
 					{approvedPercentage > 0 && (
-						<div 
-							className="bg-green-400 h-full" 
+						<div
+							className="bg-green-400 h-full"
 							style={{ width: `${approvedPercentage}%` }}
-							title={`Approved: ${approvedPercentage}%`}
-						></div>
+							title={`Approved: ${approvedPercentage}%`}></div>
 					)}
 					{rejectedPercentage > 0 && (
-						<div 
-							className="bg-red-400 h-full" 
+						<div
+							className="bg-red-400 h-full"
 							style={{ width: `${rejectedPercentage}%` }}
-							title={`Rejected: ${rejectedPercentage}%`}
-						></div>
+							title={`Rejected: ${rejectedPercentage}%`}></div>
 					)}
 				</div>
 				<div className="flex justify-between mt-2 text-xs text-gray-500">
@@ -183,35 +211,45 @@ export default function AdminDashboardPage() {
 
 	// Calculate loan KPIs and metrics
 	const calculateAverageLoanAmount = (): string => {
-		if (!dashboardData || !dashboardData.recentLoans || dashboardData.recentLoans.length === 0) {
+		if (
+			!dashboardData ||
+			!dashboardData.recentLoans ||
+			dashboardData.recentLoans.length === 0
+		) {
 			return formatCurrency(0);
 		}
-		
-		const totalAmount = dashboardData.recentLoans.reduce((sum, loan) => sum + loan.loanAmount, 0);
+
+		const totalAmount = dashboardData.recentLoans.reduce(
+			(sum, loan) => sum + loan.loanAmount,
+			0
+		);
 		const avgAmount = totalAmount / dashboardData.recentLoans.length;
-		
+
 		return formatCurrency(avgAmount);
 	};
-	
+
 	// Calculate approval rate
 	const calculateApprovalRate = (): string => {
 		if (!dashboardData || dashboardData.loanStats.total === 0) {
 			return "0%";
 		}
-		
-		const approvedRate = Math.round((dashboardData.loanStats.approved / dashboardData.loanStats.total) * 100);
+
+		const approvedRate = Math.round(
+			(dashboardData.loanStats.approved / dashboardData.loanStats.total) *
+				100
+		);
 		return `${approvedRate}%`;
 	};
 	if (isLoading) {
 		return <Loader size="large" text="Loading dashboard data..." />;
-	}	// Display error toast
+	} // Display error toast
 	if (error) {
 		return (
 			<>
 				<ErrorToast error={error} onClose={() => setError(null)} />
 				<div className="bg-red-50 p-6 rounded-lg">
-					<ErrorDisplay 
-						error={error} 
+					<ErrorDisplay
+						error={error}
 						retryFn={refreshDashboardData}
 						dismissFn={() => setError(null)}
 						className="mb-4"
@@ -228,13 +266,13 @@ export default function AdminDashboardPage() {
 		return <div>No data available</div>;
 	}
 	const formatRefreshTime = (date: Date): string => {
-		return date.toLocaleTimeString('en-US', {
-			hour: '2-digit',
-			minute: '2-digit',
-			second: '2-digit',
+		return date.toLocaleTimeString("en-US", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
 		});
 	};
-	
+
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">
@@ -246,8 +284,7 @@ export default function AdminDashboardPage() {
 					<button
 						onClick={refreshDashboardData}
 						disabled={isLoading}
-						className="inline-flex items-center px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm hover:bg-blue-100 transition-colors"
-					>
+						className="inline-flex items-center px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md text-blue-700 text-sm hover:bg-blue-100 transition-colors">
 						{isLoading ? (
 							<>
 								<div className="w-4 h-4 border-2 border-t-blue-600 border-blue-200 rounded-full animate-spin mr-2"></div>
@@ -255,8 +292,18 @@ export default function AdminDashboardPage() {
 							</>
 						) : (
 							<>
-								<svg className="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+								<svg
+									className="w-4 h-4 mr-1"
+									xmlns="http://www.w3.org/2000/svg"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor">
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+									/>
 								</svg>
 								Refresh Data
 							</>
@@ -284,8 +331,7 @@ export default function AdminDashboardPage() {
 							<Users className="w-6 h-6 text-blue-600" />
 						</div>
 					</div>
-				</Card>
-
+				</Card>{" "}
 				<Card className="p-6 bg-white shadow-sm">
 					<div className="flex items-start justify-between">
 						<div>
@@ -298,7 +344,7 @@ export default function AdminDashboardPage() {
 								)}
 							</h3>
 							<p className="text-xs text-gray-400 mt-1">
-								Total loans disbursed
+								Total amount of approved and verified loans
 							</p>
 						</div>
 						<div className="bg-green-100 p-3 rounded-full">
@@ -306,7 +352,6 @@ export default function AdminDashboardPage() {
 						</div>
 					</div>
 				</Card>
-
 				<Card className="p-6 bg-white shadow-sm">
 					<div className="flex items-start justify-between">
 						<div>
@@ -317,8 +362,9 @@ export default function AdminDashboardPage() {
 								{formatCurrency(
 									dashboardData.stats.cashReceived
 								)}
-							</h3>							<p className="text-xs text-gray-400 mt-1">
-								Total repayments received
+							</h3>{" "}
+							<p className="text-xs text-gray-400 mt-1">
+								Total amount from fully repaid loans only
 							</p>
 						</div>
 						<div className="bg-purple-100 p-3 rounded-full">
@@ -326,7 +372,6 @@ export default function AdminDashboardPage() {
 						</div>
 					</div>
 				</Card>
-
 				<Card className="p-6 bg-white shadow-sm">
 					<div className="flex items-start justify-between">
 						<div>
@@ -348,52 +393,146 @@ export default function AdminDashboardPage() {
 			</div>
 
 			{/* Loan Summary and KPI Cards */}
-			<h2 className="text-xl font-semibold mt-8">Loan Performance Metrics</h2>
+			<h2 className="text-xl font-semibold mt-8">
+				Loan Performance Metrics
+			</h2>
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+				{" "}
 				<Card className="p-6 bg-white shadow-sm">
-					<h3 className="text-sm text-gray-500 mb-2">Average Loan Amount</h3>
-					<div className="flex items-center">
-						<div className="text-2xl font-bold">{calculateAverageLoanAmount()}</div>
-					</div>
-					<div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-						<div className="bg-blue-500 h-full" style={{ width: '65%' }}></div>
-					</div>
-				</Card>
-				
-				<Card className="p-6 bg-white shadow-sm">
-					<h3 className="text-sm text-gray-500 mb-2">Approval Rate</h3>
-					<div className="flex items-center">
-						<div className="text-2xl font-bold">{calculateApprovalRate()}</div>
-					</div>
-					<div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-						<div className="bg-green-500 h-full" style={{ width: `${calculatePercentage(dashboardData.loanStats.approved, dashboardData.loanStats.total)}%` }}></div>
-					</div>
-				</Card>
-				
-				<Card className="p-6 bg-white shadow-sm">
-					<h3 className="text-sm text-gray-500 mb-2">Collection Rate</h3>
+					<h3 className="text-sm text-gray-500 mb-2 flex items-center">
+						Average Loan Amount
+						<span
+							className="ml-1 cursor-help text-gray-400 hover:text-gray-600"
+							title="Average amount of all approved and verified loans">
+							ⓘ
+						</span>
+					</h3>
 					<div className="flex items-center">
 						<div className="text-2xl font-bold">
-							{dashboardData.stats.cashReceived > 0 && dashboardData.stats.cashDisbursed > 0
-								? `${Math.round((dashboardData.stats.cashReceived / dashboardData.stats.cashDisbursed) * 100)}%`
-								: "0%"}
+							{dashboardData.kpis?.averageLoanAmount
+								? formatCurrency(
+										dashboardData.kpis.averageLoanAmount
+								  )
+								: calculateAverageLoanAmount()}
 						</div>
 					</div>
+					<p className="text-xs text-gray-500 mt-1">
+						Average of approved and repaid loans
+					</p>
 					<div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-						<div 
-							className="bg-purple-500 h-full" 
-							style={{ 
-								width: `${dashboardData.stats.cashDisbursed > 0 
-									? Math.min(100, Math.round((dashboardData.stats.cashReceived / dashboardData.stats.cashDisbursed) * 100))
-									: 0}%` 
-							}}
-						></div>
+						<div
+							className="bg-blue-500 h-full"
+							style={{ width: "65%" }}></div>
+					</div>
+				</Card>
+				<Card className="p-6 bg-white shadow-sm">
+					<h3 className="text-sm text-gray-500 mb-2 flex items-center">
+						Approval Rate
+						<span
+							className="ml-1 cursor-help text-gray-400 hover:text-gray-600"
+							title="Percentage of total applications that were approved or verified">
+							ⓘ
+						</span>
+					</h3>
+					<div className="flex items-center">
+						<div className="text-2xl font-bold">
+							{dashboardData.kpis?.approvalRate !== undefined
+								? `${Math.round(
+										dashboardData.kpis.approvalRate
+								  )}%`
+								: calculateApprovalRate()}
+						</div>
+					</div>
+					<p className="text-xs text-gray-500 mt-1">
+						Percentage of approved loan applications
+					</p>
+					<div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+						<div
+							className="bg-green-500 h-full"
+							style={{
+								width: `${
+									dashboardData.kpis?.approvalRate !==
+									undefined
+										? Math.min(
+												100,
+												Math.round(
+													dashboardData.kpis
+														.approvalRate
+												)
+										  )
+										: calculatePercentage(
+												dashboardData.loanStats
+													.approved,
+												dashboardData.loanStats.total
+										  )
+								}%`,
+							}}></div>
+					</div>{" "}
+				</Card>
+				<Card className="p-6 bg-white shadow-sm">
+					<h3 className="text-sm text-gray-500 mb-2 flex items-center">
+						Collection Rate
+						<span
+							className="ml-1 cursor-help text-gray-400 hover:text-gray-600"
+							title="The percentage of disbursed loans that have been fully repaid (verified)">
+							ⓘ
+						</span>
+					</h3>
+					<div className="flex items-center">
+						<div className="text-2xl font-bold">
+							{dashboardData.kpis?.collectionRate !== undefined
+								? `${Math.round(
+										dashboardData.kpis.collectionRate
+								  )}%`
+								: dashboardData.stats.cashReceived > 0 &&
+								  dashboardData.stats.cashDisbursed > 0
+								? `${Math.round(
+										(dashboardData.stats.cashReceived /
+											dashboardData.stats.cashDisbursed) *
+											100
+								  )}%`
+								: "0%"}
+						</div>
+					</div>{" "}
+					<p className="text-xs text-gray-500 mt-1">
+						Percentage of approved loans that have been fully repaid
+						(verified status)
+					</p>
+					<div className="mt-2 h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+						<div
+							className="bg-purple-500 h-full"
+							style={{
+								width: `${
+									dashboardData.kpis?.collectionRate !==
+									undefined
+										? Math.min(
+												100,
+												Math.round(
+													dashboardData.kpis
+														.collectionRate
+												)
+										  )
+										: dashboardData.stats.cashDisbursed > 0
+										? Math.min(
+												100,
+												Math.round(
+													(dashboardData.stats
+														.cashReceived /
+														dashboardData.stats
+															.cashDisbursed) *
+														100
+												)
+										  )
+										: 0
+								}%`,
+							}}></div>
 					</div>
 				</Card>
 			</div>
 
 			{/* Second row of stats */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+				{" "}
 				<Card className="p-6 bg-white shadow-sm">
 					<div className="flex items-start justify-between">
 						<div>
@@ -406,7 +545,7 @@ export default function AdminDashboardPage() {
 								)}
 							</h3>
 							<p className="text-xs text-gray-400 mt-1">
-								Total deposits
+								5% of repaid loans (verified loans only)
 							</p>
 						</div>
 						<div className="bg-cyan-100 p-3 rounded-full">
@@ -414,7 +553,6 @@ export default function AdminDashboardPage() {
 						</div>
 					</div>
 				</Card>
-
 				<Card className="p-6 bg-white shadow-sm">
 					<div className="flex items-start justify-between">
 						<div>
@@ -423,9 +561,9 @@ export default function AdminDashboardPage() {
 							</p>
 							<h3 className="text-2xl font-bold">
 								{dashboardData.stats.otherAccounts}
-							</h3>
+							</h3>{" "}
 							<p className="text-xs text-gray-400 mt-1">
-								Other income sources
+								Additional income sources (placeholder)
 							</p>
 						</div>
 						<div className="bg-indigo-100 p-3 rounded-full">
@@ -433,7 +571,6 @@ export default function AdminDashboardPage() {
 						</div>
 					</div>
 				</Card>
-
 				<Card className="p-6 bg-white shadow-sm">
 					<div className="flex items-start justify-between">
 						<div>
@@ -442,9 +579,9 @@ export default function AdminDashboardPage() {
 							</p>
 							<h3 className="text-2xl font-bold">
 								{dashboardData.stats.repaidLoans}
-							</h3>
+							</h3>{" "}
 							<p className="text-xs text-gray-400 mt-1">
-								Successfully closed loans
+								Fully repaid loans (verified status)
 							</p>
 						</div>
 						<div className="bg-emerald-100 p-3 rounded-full">

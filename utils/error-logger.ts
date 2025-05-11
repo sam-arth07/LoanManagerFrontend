@@ -125,11 +125,11 @@ export class ErrorLogger {
     );
     
     if (context) {
-      console.log('Context:', context);
+      // console.log('Context:', context); // Keep this if context is complex and useful for debugging
     }
     
     if (entry.stackTrace) {
-      console.log('Stack trace:', entry.stackTrace);
+      // console.log('Stack trace:', entry.stackTrace); // Keep this for debugging errors
     }
     
     console.groupEnd();

@@ -1,16 +1,16 @@
 "use client";
 
+import { ErrorDisplay, ErrorToast } from "@/components/ErrorToast";
+import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { withErrorHandling } from "@/utils/api-error";
+import { LoanApplication, useApiService } from "@/utils/api-service";
 import { useAuth } from "@clerk/nextjs";
 import { ChevronLeft, ChevronRight, Filter, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useApiService, LoanApplication } from "@/utils/api-service";
-import { withErrorHandling } from "@/utils/api-error";
-import { ErrorToast, ErrorDisplay } from "@/components/ErrorToast";
-import Loader from "@/components/Loader";
 
 // Types
 interface PaginationData {
@@ -33,13 +33,14 @@ export default function LoansPage() {
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [searchTerm, setSearchTerm] = useState("");
 	const { getToken, isLoaded } = useAuth();
-	const apiService = useApiService();	// Function to fetch loans with pagination and filters
+	const apiService = useApiService();
+
 	const fetchLoans = async () => {
 		if (!isLoaded) return;
-		
+
 		setIsLoading(true);
 		setError(null);
-		
+
 		// Prepare filters
 		const filters: Record<string, any> = {};
 		if (statusFilter !== "all") {
@@ -48,28 +49,49 @@ export default function LoansPage() {
 		if (searchTerm) {
 			filters.search = searchTerm;
 		}
-		
-		const { data, error } = await withErrorHandling(
-			() => apiService.getLoans(pagination.page, pagination.limit, filters)
-		);
-		
-		if (data) {
-			setLoans(data.loans);
-			setPagination({
-				...pagination,
-				total: data.total,
-				pages: Math.ceil(data.total / pagination.limit)
+
+		try {
+			console.log("Fetching loans with:", {
+				page: pagination.page,
+				limit: pagination.limit,
+				filters,
 			});
-		} else if (error) {
-			setError(error);
+
+			const response = await apiService.getLoans(
+				pagination.page,
+				pagination.limit,
+				filters
+			);
+			console.log("API Response:", response);
+
+			if (response && response.loans) {
+				console.log(
+					`Found ${response.loans.length} loans, total count: ${response.total}`
+				);
+				setLoans(response.loans);
+				setPagination({
+					...pagination,
+					total: response.total || 0,
+					pages: Math.ceil((response.total || 0) / pagination.limit),
+				});
+			} else {
+				console.warn("Invalid API response format:", response);
+				setError("Failed to process loan data");
+			}
+		} catch (err) {
+			console.error("Error fetching loans:", err);
+			setError(
+				err instanceof Error ? err.message : "Failed to fetch loans"
+			);
+		} finally {
+			setIsLoading(false);
 		}
-		
-		setIsLoading(false);
 	};
-		useEffect(() => {
+
+	useEffect(() => {
 		fetchLoans();
 	}, [isLoaded, pagination.page, pagination.limit, statusFilter]);
-	
+
 	// Separate useEffect to handle search with debouncing
 	useEffect(() => {
 		const timer = setTimeout(() => {
@@ -77,26 +99,41 @@ export default function LoansPage() {
 				fetchLoans();
 			}
 		}, 500); // 500ms debounce
-		
+
 		return () => clearTimeout(timer);
 	}, [searchTerm]);
+
 	// Handler for status change
 	const handleStatusChange = async (loanId: string, newStatus: string) => {
 		setError(null);
-		
-		const { data, error: updateError } = await withErrorHandling(
-			() => apiService.updateLoanStatus(loanId, newStatus)
-		);
-		
-		if (data) {
-			// Update the loan status in the local state
-			setLoans(
-				loans.map((loan) =>
-					loan.id === loanId ? { ...loan, status: newStatus } : loan
-				)
+
+		try {
+			const { data, error: updateError } = await withErrorHandling(() =>
+				apiService.updateLoanStatus(loanId, newStatus)
 			);
-		} else if (updateError) {
-			setError(updateError);
+
+			if (data) {
+				// Update the loan status in the local state
+				// Make sure loans exists before mapping
+				if (Array.isArray(loans)) {
+					setLoans(
+						loans.map((loan) =>
+							loan.id === loanId
+								? { ...loan, status: newStatus }
+								: loan
+						)
+					);
+				}
+			} else if (updateError) {
+				setError(updateError);
+			}
+		} catch (err) {
+			console.error("Error updating loan status:", err);
+			setError(
+				err instanceof Error
+					? err.message
+					: "Failed to update loan status"
+			);
 		}
 	};
 
@@ -136,11 +173,18 @@ export default function LoansPage() {
 	};
 
 	// Filtered loans (for search)
-	const filteredLoans = loans.filter(
-		(loan) =>
-			loan.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			loan.purpose.toLowerCase().includes(searchTerm.toLowerCase())
-	);
+	const filteredLoans = loans
+		? loans.filter(
+				(loan) =>
+					loan.fullName
+						.toLowerCase()
+						.includes(searchTerm.toLowerCase()) ||
+					loan.purpose
+						.toLowerCase()
+						.includes(searchTerm.toLowerCase())
+		  )
+		: [];
+
 	if (isLoading) {
 		return <Loader size="large" text="Loading loan applications..." />;
 	}
@@ -178,18 +222,21 @@ export default function LoansPage() {
 						</div>
 					</div>
 				</div>
-			</div>			{error && (
+			</div>
+
+			{error && (
 				<>
 					<ErrorToast error={error} onClose={() => setError(null)} />
 					<div className="bg-red-50 p-4 rounded-lg">
-						<ErrorDisplay 
-							error={error} 
+						<ErrorDisplay
+							error={error}
 							retryFn={fetchLoans}
 							dismissFn={() => setError(null)}
 							className="mb-2"
 						/>
 						<p className="text-sm text-gray-600 mt-2">
-							If this issue persists, please contact the system administrator.
+							If this issue persists, please contact the system
+							administrator.
 						</p>
 					</div>
 				</>
