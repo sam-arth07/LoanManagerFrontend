@@ -29,26 +29,26 @@ export default function Home() {
 				return;
 			}
 			// try {
-				const response = await fetch("/api/auth/verify-admin", {
-					headers: {
-						Authorization: `Bearer ${token}`,
-					},
-				});
-				const responseText = await response.text(); // Read as text first
+			const response = await fetch("/api/auth/verify-admin", {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			const responseText = await response.text(); // Read as text first
 
-				try {
-					const data = JSON.parse(responseText); // Then parse as JSON
-					if (response.ok) {
-						setIsAdmin(!!data.isAdmin);
+			try {
+				const data = JSON.parse(responseText); // Then parse as JSON
+				if (response.ok) {
+					setIsAdmin(!!data.isAdmin);
 
-						if (data.isAdmin) {
-							console.log("User is admin, can access /admin");
-						} else {
-							console.log(
-								"User is not an admin, cannot access /admin"
-							);
-						}
-						} else {
+					if (data.isAdmin) {
+						console.log("User is admin, can access /admin");
+					} else {
+						console.log(
+							"User is not an admin, cannot access /admin"
+						);
+					}
+				} else {
 					console.log(
 						"❌ Verification failed:",
 						response.status,
