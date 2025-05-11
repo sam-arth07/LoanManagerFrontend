@@ -1,5 +1,6 @@
 "use client";
 
+import { getApiBaseUrl } from "@/utils/api-service"; // Added import
 import { UserButton, useAuth, useUser } from "@clerk/nextjs";
 import {
 	BarChart4,
@@ -37,11 +38,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 					// const apiUrl =
 					// 	process.env.NEXT_PUBLIC_API_URL ||
 					// 	"http://localhost:5000";
-					const response = await fetch(`/api/auth/verify-admin`, {
-						headers: {
-							Authorization: `Bearer ${token}`,
-						},
-					});
+					const response = await fetch(
+						`${getApiBaseUrl()}/api/auth/verify-admin`,
+						{
+							headers: {
+								Authorization: `Bearer ${token}`,
+							},
+						}
+					);
 
 					// const responseText = await response.text();
 					let data;

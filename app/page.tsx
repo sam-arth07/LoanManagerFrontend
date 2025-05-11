@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { getApiBaseUrl } from "@/utils/api-service"; // Added import
 import {
 	SignInButton,
 	SignedIn,
@@ -29,11 +30,14 @@ export default function Home() {
 				return;
 			}
 			// try {
-			const response = await fetch("/api/auth/verify-admin", {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			});
+			const response = await fetch(
+				`${getApiBaseUrl()}/api/auth/verify-admin`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
 			const responseText = await response.text(); // Read as text first
 
 			try {
