@@ -12,6 +12,8 @@
 
 **A modern, full-stack loan management system designed for financial institutions and lending platforms.**
 
+**🔗 Repositories:** [Frontend](https://github.com/sam-arth07/LoanManagerFrontend) • [Backend](https://github.com/sam-arth07/LoanManagerBackend)
+
 [🚀 Live Demo](https://loan-manager-frontend-bcvd.vercel.app/) • [📖 Documentation](#documentation) • [🔧 Installation](#installation) • [🤝 Contributing](#contributing)
 
 </div>
@@ -21,32 +23,36 @@
 ## ✨ Features
 
 ### 👤 **User Experience**
-- 🔐 **Secure Authentication** - Powered by Clerk with JWT tokens
-- 📱 **Responsive Design** - Seamless experience across all devices
-- 🎨 **Modern UI/UX** - Built with Tailwind CSS and Radix UI components
-- ⚡ **Real-time Updates** - Instant loan status notifications
-- 🔄 **Offline Support** - Continue working even without internet
+
+-   🔐 **Secure Authentication** - Powered by Clerk with JWT tokens
+-   📱 **Responsive Design** - Seamless experience across all devices
+-   🎨 **Modern UI/UX** - Built with Tailwind CSS and Radix UI components
+-   ⚡ **Real-time Updates** - Instant loan status notifications
+-   🔄 **Offline Support** - Continue working even without internet
 
 ### 💼 **Loan Management**
-- 📝 **Easy Application Process** - Streamlined loan application workflow
-- 📊 **Application Tracking** - Track loans from application to approval
-- 💰 **Multiple Loan Types** - Support for various loan purposes
-- 📈 **Status Management** - Pending → Approved → Verified → Repaid workflow
-- 🔍 **Advanced Filtering** - Search and filter loans by multiple criteria
+
+-   📝 **Easy Application Process** - Streamlined loan application workflow
+-   📊 **Application Tracking** - Track loans from application to approval
+-   💰 **Multiple Loan Types** - Support for various loan purposes
+-   📈 **Status Management** - Pending → Approved → Verified → Repaid workflow
+-   🔍 **Advanced Filtering** - Search and filter loans by multiple criteria
 
 ### 👨‍💼 **Admin Dashboard**
-- 📈 **Analytics Dashboard** - Comprehensive loan statistics and KPIs
-- 👥 **User Management** - Manage borrowers and admin users
-- 💸 **Financial Overview** - Track disbursed amounts, repayments, and savings
-- 📋 **Loan Administration** - Approve, reject, or verify loan applications
-- 📊 **Performance Metrics** - Approval rates, collection rates, and more
+
+-   📈 **Analytics Dashboard** - Comprehensive loan statistics and KPIs
+-   👥 **User Management** - Manage borrowers and admin users
+-   💸 **Financial Overview** - Track disbursed amounts, repayments, and savings
+-   📋 **Loan Administration** - Approve, reject, or verify loan applications
+-   📊 **Performance Metrics** - Approval rates, collection rates, and more
 
 ### 🔧 **Technical Excellence**
-- 🏗️ **Monorepo Architecture** - Organized codebase with separate frontend/backend
-- 🛡️ **Type Safety** - Full TypeScript implementation
-- 🗃️ **Database ORM** - Prisma for type-safe database operations
-- 🌐 **API Architecture** - RESTful API with proper error handling
-- 🔒 **Security** - CORS protection, input validation, and secure authentication
+
+-   🏗️ **Microservices Architecture** - Separate frontend and backend repositories for independent deployment
+-   🛡️ **Type Safety** - Full TypeScript implementation across both services
+-   🗃️ **Database ORM** - Prisma for type-safe database operations
+-   🌐 **API Architecture** - RESTful API with proper error handling
+-   🔒 **Security** - CORS protection, input validation, and secure authentication
 
 ---
 
@@ -62,22 +68,22 @@ graph TB
         C[Clerk Authentication]
         D[React Hook Form]
     end
-    
+
     subgraph "Backend (Render)"
         E[Express.js Server]
         F[Prisma ORM]
         G[JWT Middleware]
         H[CORS Protection]
     end
-    
+
     subgraph "Database"
         I[(MongoDB Atlas)]
     end
-    
+
     subgraph "Authentication"
         J[Clerk Platform]
     end
-    
+
     A --> E
     E --> F
     F --> I
@@ -92,117 +98,156 @@ graph TB
 ## 🛠️ Tech Stack
 
 ### **Frontend**
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| ⚛️ **Next.js** | React Framework | 15.3.2 |
-| 🎨 **Tailwind CSS** | Styling | Latest |
-| 🧩 **Radix UI** | Component Library | Latest |
-| 🔐 **Clerk** | Authentication | 6.19.1 |
-| 📋 **React Hook Form** | Form Management | Latest |
-| 🌙 **Next Themes** | Dark Mode Support | 0.4.6 |
+
+| Technology             | Purpose           | Version |
+| ---------------------- | ----------------- | ------- |
+| ⚛️ **Next.js**         | React Framework   | 15.3.2  |
+| 🎨 **Tailwind CSS**    | Styling           | Latest  |
+| 🧩 **Radix UI**        | Component Library | Latest  |
+| 🔐 **Clerk**           | Authentication    | 6.19.1  |
+| 📋 **React Hook Form** | Form Management   | Latest  |
+| 🌙 **Next Themes**     | Dark Mode Support | 0.4.6   |
 
 ### **Backend**
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| 🟢 **Node.js** | Runtime Environment | Latest |
-| ⚡ **Express.js** | Web Framework | 5.1.0 |
-| 🔺 **TypeScript** | Type Safety | 5.8.3 |
-| 🗃️ **Prisma** | Database ORM | 6.7.0 |
-| 🍃 **MongoDB** | Database | Latest |
-| 🔐 **Clerk SDK** | Authentication | 5.1.6 |
+
+| Technology        | Purpose             | Version |
+| ----------------- | ------------------- | ------- |
+| 🟢 **Node.js**    | Runtime Environment | Latest  |
+| ⚡ **Express.js** | Web Framework       | 5.1.0   |
+| 🔺 **TypeScript** | Type Safety         | 5.8.3   |
+| 🗃️ **Prisma**     | Database ORM        | 6.7.0   |
+| 🍃 **MongoDB**    | Database            | Latest  |
+| 🔐 **Clerk SDK**  | Authentication      | 5.1.6   |
 
 ### **Deployment & DevOps**
-| Service | Purpose |
-|---------|---------|
-| ▲ **Vercel** | Frontend Hosting |
-| 🎨 **Render** | Backend Hosting |
-| 🍃 **MongoDB Atlas** | Database Hosting |
-| 🔐 **Clerk** | Authentication Service |
+
+| Service              | Purpose                |
+| -------------------- | ---------------------- |
+| ▲ **Vercel**         | Frontend Hosting       |
+| 🎨 **Render**        | Backend Hosting        |
+| 🍃 **MongoDB Atlas** | Database Hosting       |
+| 🔐 **Clerk**         | Authentication Service |
 
 ---
 
 ## 🚀 Installation
 
 ### Prerequisites
-- Node.js 18+ installed
-- MongoDB Atlas account (or local MongoDB)
-- Clerk account for authentication
 
-### 1️⃣ Clone the Repository
+-   Node.js 18+ installed
+-   MongoDB Atlas account (or local MongoDB)
+-   Clerk account for authentication
+
+> **Note:** This project consists of two separate repositories - Frontend and Backend. You can choose to run either independently or both together for full functionality.
+
+---
+
+## 🎨 Frontend Setup
+
+### 1️⃣ Clone the Frontend Repository
+
 ```bash
-git clone https://github.com/your-username/loan-manager.git
-cd loan-manager
+git clone https://github.com/sam-arth07/LoanManagerFrontend.git
+cd LoanManagerFrontend
 ```
 
 ### 2️⃣ Install Dependencies
 
-**Frontend:**
 ```bash
-cd apps/frontend
-npm install
-```
-
-**Backend:**
-```bash
-cd apps/backend
 npm install
 ```
 
 ### 3️⃣ Environment Setup
 
-**Frontend (.env.local):**
+Create a `.env.local` file in the root directory:
+
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=https://your-backend-url.com
 ```
 
-**Backend (.env):**
+### 4️⃣ Start Development Server
+
+```bash
+npm run dev
+```
+
+### 5️⃣ Access the Frontend
+
+-   Development: http://localhost:3000
+-   Production: https://loan-manager-frontend-bcvd.vercel.app/
+
+---
+
+## ⚙️ Backend Setup
+
+### 1️⃣ Clone the Backend Repository
+
+```bash
+git clone https://github.com/sam-arth07/LoanManagerBackend.git
+cd LoanManagerBackend
+```
+
+### 2️⃣ Install Dependencies
+
+```bash
+npm install
+```
+
+### 3️⃣ Environment Setup
+
+Create a `.env` file in the root directory:
+
 ```env
 DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/loanmanager"
 CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
 CLERK_SECRET_KEY=your_clerk_secret_key
 PORT=5000
+FRONTEND_URL=https://your-frontend-url.com
 ```
 
 ### 4️⃣ Database Setup
+
 ```bash
-cd apps/backend
 npx prisma generate
 npx prisma db push
 ```
 
-### 5️⃣ Start Development Servers
+### 5️⃣ Start Development Server
 
-**Backend:**
 ```bash
-cd apps/backend
 npm run dev
 ```
 
-**Frontend:**
-```bash
-cd apps/frontend
-npm run dev
-```
+### 6️⃣ Access the Backend API
 
-### 6️⃣ Access the Application
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+-   Development: http://localhost:5000
+-   Production: https://your-backend-deployment-url.com
+
+---
+
+## 🔗 Connecting Frontend & Backend
+
+1. **Update Frontend Environment**: Set `NEXT_PUBLIC_API_URL` to your backend URL
+2. **Update Backend CORS**: Add your frontend URL to the allowed origins in the backend
+3. **Verify Connection**: Check that API calls from frontend reach the backend successfully
 
 ---
 
 ## 🎯 Usage Guide
 
 ### **For Borrowers:**
+
 1. **Sign Up/Login** using the authentication system
 2. **Apply for a Loan** by filling out the application form
 3. **Track Application Status** in your dashboard
 4. **View Loan History** and repayment status
 
 ### **For Administrators:**
+
 1. **Access Admin Dashboard** (requires admin privileges)
 2. **Review Applications** and make approval decisions
 3. **Monitor Analytics** and loan performance metrics
@@ -212,23 +257,45 @@ npm run dev
 
 ## 📁 Project Structure
 
+### **Frontend Repository Structure**
+
 ```
-loan-manager/
-├── 📁 apps/
-│   ├── 📁 frontend/          # Next.js Frontend Application
-│   │   ├── 📁 app/           # App Router Pages
-│   │   ├── 📁 components/    # Reusable UI Components
-│   │   ├── 📁 hooks/         # Custom React Hooks
-│   │   ├── 📁 lib/           # Utility Libraries
-│   │   └── 📁 utils/         # Helper Functions
-│   └── 📁 backend/           # Express.js Backend API
-│       ├── 📁 src/           # Source Code
-│       │   ├── 📁 routes/    # API Route Handlers
-│       │   └── prisma.ts     # Database Client
-│       ├── 📁 prisma/        # Database Schema
-│       └── index.ts          # Server Entry Point
-├── 📄 README.md              # Project Documentation
-└── 📄 package.json           # Root Package Configuration
+LoanManagerFrontend/
+├── 📁 app/                   # Next.js App Router
+│   ├── 📁 admin/             # Admin Dashboard Pages
+│   ├── 📁 dashboard/         # User Dashboard
+│   ├── layout.tsx            # Root Layout
+│   ├── page.tsx              # Home Page
+│   └── globals.css           # Global Styles
+├── 📁 components/            # Reusable UI Components
+│   ├── 📁 ui/                # Shadcn/UI Components
+│   ├── AdminLayout.tsx       # Admin Layout Wrapper
+│   ├── LoanForm.tsx          # Loan Application Form
+│   └── UserLoansTable.tsx    # Loans Display Table
+├── 📁 hooks/                 # Custom React Hooks
+├── 📁 lib/                   # Utility Libraries
+├── 📁 utils/                 # Helper Functions
+├── 📁 public/                # Static Assets
+├── package.json              # Dependencies
+└── README.md                 # Documentation
+```
+
+### **Backend Repository Structure**
+
+```
+LoanManagerBackend/
+├── 📁 src/                   # Source Code
+│   ├── 📁 routes/            # API Route Handlers
+│   │   ├── admin.ts          # Admin Operations
+│   │   ├── auth.ts           # Authentication
+│   │   └── loan.ts           # Loan Management
+│   └── prisma.ts             # Database Client
+├── 📁 prisma/                # Database Schema
+│   └── schema.prisma         # Prisma Schema File
+├── 📁 generated/             # Generated Prisma Client
+├── index.ts                  # Server Entry Point
+├── package.json              # Dependencies
+└── README.md                 # Documentation
 ```
 
 ---
@@ -236,11 +303,13 @@ loan-manager/
 ## 🔌 API Documentation
 
 ### **Authentication Endpoints**
+
 ```http
 POST /api/auth/verify           # Verify user authentication
 ```
 
 ### **Loan Management**
+
 ```http
 GET    /api/loan                # Get user's loans
 POST   /api/loan                # Create new loan application
@@ -249,6 +318,7 @@ DELETE /api/loan/:id            # Delete loan application
 ```
 
 ### **Admin Endpoints**
+
 ```http
 GET    /api/admin/dashboard-stats    # Get dashboard statistics
 GET    /api/admin/loans              # Get all loans (paginated)
@@ -261,62 +331,51 @@ GET    /api/admin/users              # Get all users (paginated)
 
 ## 🚀 Deployment
 
-### **Frontend (Vercel)**
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on every push to main branch
+### **Frontend Deployment (Vercel)**
 
-### **Backend (Render)**
-1. Create a new web service on Render
-2. Connect your GitHub repository
-3. Set build command: `npm run build`
-4. Set start command: `npm start`
-5. Configure environment variables
+1. Fork the [Frontend Repository](https://github.com/sam-arth07/LoanManagerFrontend)
+2. Connect your forked repository to Vercel
+3. Set environment variables in Vercel dashboard:
+    ```env
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+    CLERK_SECRET_KEY=your_clerk_secret_key
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+    NEXT_PUBLIC_API_URL=https://your-backend-url.com
+    ```
+4. Deploy automatically on every push to main branch
 
----
+### **Backend Deployment (Render)**
 
-## 🤝 Contributing
+1. Fork the [Backend Repository](https://github.com/sam-arth07/LoanManagerBackend)
+2. Create a new web service on Render
+3. Connect your forked repository
+4. Set build command: `npm run build`
+5. Set start command: `npm start`
+6. Configure environment variables:
+    ```env
+    DATABASE_URL=mongodb+srv://...
+    CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+    CLERK_SECRET_KEY=your_clerk_secret_key
+    PORT=5000
+    FRONTEND_URL=https://your-frontend-url.vercel.app
+    ```
 
-We welcome contributions! Please follow these steps:
+### **Post-Deployment Steps**
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-### **Development Guidelines**
-- Follow TypeScript best practices
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+1. Update frontend environment variable `NEXT_PUBLIC_API_URL` with your backend URL
+2. Update backend CORS settings to include your frontend URL
+3. Test the connection between frontend and backend
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **Clerk** for providing robust authentication
-- **Vercel** for seamless frontend deployment
-- **MongoDB Atlas** for reliable database hosting
-- **Render** for efficient backend hosting
-- **Radix UI** for accessible component primitives
-
----
-
-## 📞 Support
-
-Need help? We're here for you!
-
-- 📧 **Email**: support@creditsea.com
-- 💬 **Discord**: [Join our community](https://discord.gg/creditsea)
-- 📖 **Documentation**: [Read the docs](#documentation)
-- 🐛 **Issues**: [Report a bug](https://github.com/your-username/loan-manager/issues)
+-   **Clerk** for providing robust authentication
+-   **Vercel** for seamless frontend deployment
+-   **MongoDB Atlas** for reliable database hosting
+-   **Render** for efficient backend hosting
+-   **Radix UI** for accessible component primitives
 
 ---
 
@@ -324,7 +383,8 @@ Need help? We're here for you!
 
 **⭐ If this project helped you, please give it a star! ⭐**
 
-[![GitHub stars](https://img.shields.io/github/stars/your-username/loan-manager?style=social)](https://github.com/your-username/loan-manager/stargazers)
+[![Frontend Stars](https://img.shields.io/github/stars/sam-arth07/LoanManagerFrontend?style=social&label=Frontend%20Stars)](https://github.com/sam-arth07/LoanManagerFrontend/stargazers)
+[![Backend Stars](https://img.shields.io/github/stars/sam-arth07/LoanManagerBackend?style=social&label=Backend%20Stars)](https://github.com/sam-arth07/LoanManagerBackend/stargazers)
 
 Made with ❤️ by the CreditSea Team
 
